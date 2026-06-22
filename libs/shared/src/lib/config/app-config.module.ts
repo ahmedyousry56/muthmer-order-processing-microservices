@@ -13,10 +13,7 @@ export class AppConfigModule {
         ConfigModule.forRoot({
           isGlobal: true,
           validationSchema: envSchema,
-          envFilePath: [
-            '.env',
-            `apps/${appName}/.env`,
-          ],
+          envFilePath: ['.env', `apps/${appName}/.env`],
         }),
       ],
       providers: [AppConfigService],

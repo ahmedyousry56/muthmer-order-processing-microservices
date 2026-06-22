@@ -9,7 +9,8 @@ export class AppConfigService {
   get app() {
     return {
       port: this.ConfigService.get('PORT', 8000),
-      isProduction: this.ConfigService.get('NODE_ENV', 'development') === 'production',
+      isProduction:
+        this.ConfigService.get('NODE_ENV', 'development') === 'production',
       prefix: this.ConfigService.get('API_PREFIX', 'api'),
     };
   }

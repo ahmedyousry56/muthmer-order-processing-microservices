@@ -4,9 +4,7 @@ import { AppService } from './app.service';
 import { AppConfigModule } from '@libs/shared';
 
 @Module({
-  imports: [
-    AppConfigModule.forRoot('inventory-service')
-  ],
+  imports: [AppConfigModule.forRoot('inventory-service')],
   controllers: [AppController],
   providers: [AppService],
 })
