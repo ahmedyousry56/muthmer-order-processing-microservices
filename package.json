@@ -6,6 +6,7 @@
     "prisma:generate": "prisma db pull && prisma generate --schema=libs/shared/prisma/schema.prisma",
     "prisma:migrate": "prisma migrate dev --schema=libs/shared/prisma/schema.prisma",
     "prisma:deploy": "prisma migrate deploy --schema=libs/shared/prisma/schema.prisma",
+    "prisma:seed": "prisma db seed",
     "prisma:studio": "prisma studio --schema=libs/shared/prisma/schema.prisma",
     "start:orders": "nx serve orders-service",
     "build:orders": "nx build orders-service",
@@ -68,5 +69,8 @@
     "**/*.{js,ts,json,md,yaml,yml}": [
       "prettier --write"
     ]
+  },
+  "prisma": {
+    "seed": "ts-node libs/shared/prisma/seed/index.ts"
   }
 }
