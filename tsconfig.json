@@ -2,5 +2,21 @@
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
   "files": [],
-  "references": []
+  "references": [
+    {
+      "path": "./apps/orders-service-e2e"
+    },
+    {
+      "path": "./apps/orders-service"
+    },
+    {
+      "path": "./apps/inventory-service-e2e"
+    },
+    {
+      "path": "./apps/inventory-service"
+    },
+    {
+      "path": "./libs/shared"
+    }
+  ]
 }
