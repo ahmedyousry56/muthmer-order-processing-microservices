@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
+import { AppConfigModule } from './config';
 
 @Module({
-  controllers: [],
-  providers: [],
-  exports: [],
+  imports: [AppConfigModule],
+  exports: [AppConfigModule],
 })
-export class MuthmerOrderProcessingSharedModule {}
+export class SharedModule {}

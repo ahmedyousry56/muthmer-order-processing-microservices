@@ -16,6 +16,10 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
-    "customConditions": ["@muthmer-order-processing/source"]
+    "baseUrl": ".",
+    "customConditions": ["@muthmer-order-processing/source"],
+    "paths": {
+      "@libs/shared": ["libs/shared/src/index.ts"]
+    }
   }
 }

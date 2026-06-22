@@ -6,7 +6,9 @@
     "start:orders": "nx serve orders-service",
     "build:orders": "nx build orders-service",
     "start:inventory": "nx serve inventory-service",
-    "build:inventory": "nx build inventory-service"
+    "build:inventory": "nx build inventory-service",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "private": true,
   "devDependencies": {
@@ -42,10 +44,12 @@
   ],
   "dependencies": {
     "@nestjs/common": "^11.0.0",
+    "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
     "axios": "^1.6.0",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.0"
+    "rxjs": "^7.8.0",
+    "yup": "^1.7.1"
   }
 }
