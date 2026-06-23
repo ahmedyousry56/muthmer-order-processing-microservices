@@ -18,7 +18,10 @@ export class AppConfigService {
   get jwt() {
     return {
       secret: this.ConfigService.get('JWT_SECRET', 'super-secret-key'),
-      cookieName: this.ConfigService.get('JWT_COOKIE_NAME', 'access_token'),
+      cookieName: this.ConfigService.get(
+        'JWT_COOKIE_NAME',
+        'muthmer_access_token',
+      ),
     };
   }
 
