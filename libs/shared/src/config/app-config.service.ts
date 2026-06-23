@@ -14,4 +14,17 @@ export class AppConfigService {
       prefix: this.ConfigService.get('API_PREFIX', 'api'),
     };
   }
+
+  get jwt() {
+    return {
+      secret: this.ConfigService.get('JWT_SECRET', 'super-secret-key'),
+      cookieName: this.ConfigService.get('JWT_COOKIE_NAME', 'access_token'),
+    };
+  }
+
+  get bcrypt() {
+    return {
+      saltRound: this.ConfigService.get('BCRYPT_SALT_ROUNDS', 10),
+    };
+  }
 }
