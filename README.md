@@ -83,29 +83,15 @@ Key environment variables:
 
 ### 3. Start infrastructure with Docker Compose
 
-Spin up Kafka, PostgreSQL, and both services:
+Spin up Kafka, PostgreSQL, the database migration service, and both application services:
 
 ```bash
-docker-compose up -d
+docker-compose up --build -d
 ```
 
-> This starts Kafka (KRaft mode), PostgreSQL, Orders Service, and Inventory Service.
+> This starts Kafka (KRaft mode) and PostgreSQL. A dedicated `db-migrate` service will then automatically run Prisma migrations and seed the database. Once completed, the Orders Service and Inventory Service will start automatically.
 
-### 4. Run database migrations
-
-```bash
-npx prisma migrate deploy --schema=libs/shared/prisma/schema.prisma
-```
-
-### 5. Seed the database
-
-The seed populates the database with **test data** for development and demonstration:
-
-```bash
-npm run prisma:seed
-```
-
-This creates:
+The automated seed populates the database with **test data** for development and demonstration. It creates:
 
 **Customers** (3 pre-registered users):
 
@@ -186,10 +172,13 @@ curl -X POST http://localhost:3000/api/auth/login \
 
 **2. Create an order (use the access_token from login):**
 
+> **Note**: This endpoint requires a valid UUID v4 in the `x-idempotency-key` header to prevent duplicate orders. Swagger UI is pre-configured with a default key for easy testing.
+
 ```bash
 curl -X POST http://localhost:3000/api/orders \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <access_token>" \
+  -H "x-idempotency-key: $(uuidgen)" \
   -d '{
     "items": [
       { "item_id": "<item-uuid>", "quantity": 2 },
@@ -210,6 +199,7 @@ curl http://localhost:3000/api/orders/<order-id> \
 ```
 muthmer-order-processing/
 ├── apps/
+│   ├── db-migrate/             # Dedicated Prisma migration & seeding service
 │   ├── orders-service/         # REST API + Kafka consumer/producer
 │   │   └── src/
 │   │       ├── app/
