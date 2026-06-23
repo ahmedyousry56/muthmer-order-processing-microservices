@@ -27,7 +27,7 @@ services:
       test:
         [
           'CMD-SHELL',
-          'kafka-topics.sh --bootstrap-server localhost:9092 --list',
+          '/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list',
         ]
       interval: 10s
       timeout: 5s

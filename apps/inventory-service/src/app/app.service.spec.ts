@@ -1,20 +1,36 @@
-import { Test } from '@nestjs/testing';
+import { Test, TestingModule } from '@nestjs/testing';
 import { AppService } from './app.service';
+import { PrismaService } from '@libs/shared';
 
 describe('AppService', () => {
   let service: AppService;
 
-  beforeAll(async () => {
-    const app = await Test.createTestingModule({
-      providers: [AppService],
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AppService,
+        {
+          provide: 'KAFKA_SERVICE',
+          useValue: {
+            emit: jest.fn(),
+          },
+        },
+        {
+          provide: PrismaService,
+          useValue: {
+            $transaction: jest.fn(),
+            processed_events: {
+              findUnique: jest.fn(),
+            },
+          },
+        },
+      ],
     }).compile();
 
-    service = app.get<AppService>(AppService);
+    service = module.get<AppService>(AppService);
   });
 
-  describe('getData', () => {
-    it('should return "Hello API"', () => {
-      expect(service.getData()).toEqual({ message: 'Hello API' });
-    });
+  it('should be defined', () => {
+    expect(service).toBeDefined();
   });
 });
