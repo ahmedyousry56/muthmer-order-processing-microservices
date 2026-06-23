@@ -15,6 +15,7 @@ COPY package*.json ./
 RUN npm install --omit=dev --ignore-scripts && npm cache clean --force
 COPY libs/shared/prisma ./libs/shared/prisma
 RUN npx --yes prisma generate --schema=libs/shared/prisma/schema.prisma
-COPY --from=builder /app/apps/orders-service/dist ./dist
+# NX outputs to dist/apps/<name>, not apps/<name>/dist
+COPY --from=builder /app/dist/apps/orders-service ./dist
 EXPOSE ${PORT:-3000}
 CMD ["node", "dist/main.js"]

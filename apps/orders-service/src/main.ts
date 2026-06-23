@@ -58,6 +58,9 @@ export async function bootstrap() {
       consumer: {
         groupId: appConfigService.kafka.ordersGroupId,
         allowAutoTopicCreation: true,
+        sessionTimeout: 30000, // ← fixes the negative timeout warning
+        heartbeatInterval: 3000,
+        rebalanceTimeout: 60000,
       },
     },
   });

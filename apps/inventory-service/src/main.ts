@@ -26,6 +26,9 @@ async function bootstrap() {
         consumer: {
           groupId,
           allowAutoTopicCreation: true,
+          sessionTimeout: 30000,
+          heartbeatInterval: 3000,
+          rebalanceTimeout: 60000,
         },
       },
     },
