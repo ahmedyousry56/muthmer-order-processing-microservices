@@ -3,19 +3,31 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
 describe('AppController', () => {
-  let app: TestingModule;
+  let appController: AppController;
+  let appService: AppService;
 
-  beforeAll(async () => {
-    app = await Test.createTestingModule({
+  beforeEach(async () => {
+    const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AppService],
+      providers: [
+        {
+          provide: AppService,
+          useValue: {
+            processOrder: jest.fn(),
+          },
+        },
+      ],
     }).compile();
+
+    appController = app.get<AppController>(AppController);
+    appService = app.get<AppService>(AppService);
   });
 
-  describe('getData', () => {
-    it('should return "Hello API"', () => {
-      const appController = app.get<AppController>(AppController);
-      expect(appController.getData()).toEqual({ message: 'Hello API' });
+  describe('handleOrderCreated', () => {
+    it('should call processOrder on AppService', async () => {
+      const message = { eventId: '123', orderId: '456', items: [] };
+      await appController.handleOrderCreated(message);
+      expect(appService.processOrder).toHaveBeenCalledWith(message);
     });
   });
 });
