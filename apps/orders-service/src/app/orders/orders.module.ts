@@ -1,13 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { AppConfigModule, AppConfigService, PrismaModule } from '@libs/shared';
+import { AppConfigService } from '@libs/shared';
+import { OrdersService } from './orders.service';
+import { OrdersController } from './orders.controller';
 
 @Module({
   imports: [
-    AppConfigModule.forRoot('inventory-service'),
-    PrismaModule,
     ClientsModule.registerAsync([
       {
         name: 'KAFKA_SERVICE',
@@ -16,12 +14,12 @@ import { AppConfigModule, AppConfigService, PrismaModule } from '@libs/shared';
           transport: Transport.KAFKA,
           options: {
             client: {
-              clientId: 'inventory',
+              clientId: 'orders',
               brokers: [config.kafka.broker],
               allowAutoTopicCreation: true,
             },
             consumer: {
-              groupId: config.kafka.inventoryGroupId,
+              groupId: config.kafka.ordersGroupId,
               allowAutoTopicCreation: true,
             },
           },
@@ -29,7 +27,7 @@ import { AppConfigModule, AppConfigService, PrismaModule } from '@libs/shared';
       },
     ]),
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [OrdersController],
+  providers: [OrdersService],
 })
-export class AppModule {}
+export class OrdersModule {}

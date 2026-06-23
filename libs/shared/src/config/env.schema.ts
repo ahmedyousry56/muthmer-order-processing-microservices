@@ -11,6 +11,9 @@ export const envSchema = yup.object({
   JWT_SECRET: yup.string().default('super-secret-key'),
   JWT_COOKIE_NAME: yup.string().default('access_token'),
   BCRYPT_SALT_ROUNDS: yup.number().default(10),
+  KAFKA_BROKER: yup.string().default('localhost:9092'),
+  KAFKA_ORDERS_GROUP: yup.string().default('orders-consumer-group'),
+  KAFKA_INVENTORY_GROUP: yup.string().default('inventory-consumer-group'),
 });
 
 export type EnvConfig = yup.InferType<typeof envSchema>;

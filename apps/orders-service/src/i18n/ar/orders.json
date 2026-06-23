@@ -1,0 +1,4 @@
+{
+  "items_not_found": "العناصر غير موجودة: {missingItems}",
+  "order_not_found": "الطلب برقم {id} غير موجود"
+}
