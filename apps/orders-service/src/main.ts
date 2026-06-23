@@ -5,7 +5,6 @@ import { AppConfigService } from '@libs/shared';
 import { I18nValidationPipe } from 'nestjs-i18n';
 import cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { Transport } from '@nestjs/microservices';
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -48,26 +47,11 @@ export async function bootstrap() {
 
   const port = appConfigService.app.port;
 
-  app.connectMicroservice({
-    transport: Transport.KAFKA,
-    options: {
-      client: {
-        brokers: [appConfigService.kafka.broker],
-        allowAutoTopicCreation: true,
-        retry: {
-          initialRetryTime: 300,
-          retries: 5,
-        },
-      },
-      consumer: {
-        groupId: appConfigService.kafka.ordersGroupId,
-        allowAutoTopicCreation: true,
-        sessionTimeout: 30000,
-        heartbeatInterval: 3000,
-        rebalanceTimeout: 60000,
-      },
-    },
-  });
+  app.connectMicroservice(
+    appConfigService.getKafkaMicroserviceOptions(
+      appConfigService.kafka.ordersGroupId,
+    ),
+  );
 
   await app.startAllMicroservices();
   await app.listen(port);

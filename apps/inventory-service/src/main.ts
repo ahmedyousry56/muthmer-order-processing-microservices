@@ -1,7 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { MicroserviceOptions } from '@nestjs/microservices';
 import { AppConfigService } from '@libs/shared';
 
 async function bootstrap() {
@@ -16,26 +16,7 @@ async function bootstrap() {
 
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     AppModule,
-    {
-      transport: Transport.KAFKA,
-      options: {
-        client: {
-          brokers: [broker],
-          allowAutoTopicCreation: true,
-          retry: {
-            initialRetryTime: 300,
-            retries: 5,
-          },
-        },
-        consumer: {
-          groupId,
-          allowAutoTopicCreation: true,
-          sessionTimeout: 30000,
-          heartbeatInterval: 3000,
-          rebalanceTimeout: 60000,
-        },
-      },
-    },
+    configService.getKafkaMicroserviceOptions(groupId),
   );
 
   await app.listen();
