@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -9,7 +10,10 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { isUUID } from 'class-validator';
 import { ApiHeader } from '@nestjs/swagger';
+import { I18n, I18nContext } from 'nestjs-i18n';
+import { I18nTranslations } from '../../i18n/i18n-types';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
@@ -30,18 +34,24 @@ export class OrdersController {
       'Creates a new order with PENDING status and publishes an order.created event to Kafka. Use X-Idempotency-Key header to prevent duplicate orders.',
   })
   @ApiHeader({
-    name: 'X-Idempotency-Key',
+    name: 'x-idempotency-key',
     description:
       'Unique key to prevent duplicate order creation. Send the same key to get the same order back.',
-    required: false,
+    example: '019ef4c9-1dac-7189-a4d1-89c1df0b1cc7',
+    required: true,
   })
   @Post()
   @UseGuards(AuthGuard)
   async createOrder(
     @Body() createOrderDto: CreateOrderDto,
     @Req() req: RequestWithUser,
-    @Headers('x-idempotency-key') idempotencyKey?: string,
+    @Headers('x-idempotency-key') idempotencyKey: string,
+    @I18n() i18n: I18nContext<I18nTranslations>,
   ) {
+    if (!idempotencyKey || !isUUID(idempotencyKey)) {
+      throw new BadRequestException(i18n.t('orders.invalid_idempotency_key'));
+    }
+
     return this.OrdersService.createOrder(
       createOrderDto,
       req.user,

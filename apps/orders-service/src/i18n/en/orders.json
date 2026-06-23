@@ -1,4 +1,5 @@
 {
   "items_not_found": "Items not found: {missingItems}",
-  "order_not_found": "Order with id {id} not found"
+  "order_not_found": "Order with id {id} not found",
+  "invalid_idempotency_key": "x-idempotency-key header must be a valid UUID"
 }

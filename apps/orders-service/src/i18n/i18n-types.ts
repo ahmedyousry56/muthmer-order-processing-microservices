@@ -25,6 +25,7 @@ export type I18nTranslations = {
     "orders": {
         "items_not_found": string;
         "order_not_found": string;
+        "invalid_idempotency_key": string;
     };
 };
 /* prettier-ignore */

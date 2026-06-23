@@ -26,7 +26,7 @@ export class OrdersService {
   async createOrder(
     createOrderDto: CreateOrderDto,
     customer: customers,
-    idempotencyKey?: string,
+    idempotencyKey: string,
   ) {
     // REST-level idempotency: if a key was provided, check if we already processed it
     if (idempotencyKey) {
