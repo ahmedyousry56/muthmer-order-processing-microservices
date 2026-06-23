@@ -11,6 +11,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { customers, order_status } from '@prisma/client';
 import { I18nService } from 'nestjs-i18n';
 import { I18nTranslations } from '../../i18n/i18n-types';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class OrdersService {
@@ -22,7 +23,26 @@ export class OrdersService {
     private readonly I18nService: I18nService<I18nTranslations>,
   ) {}
 
-  async createOrder(createOrderDto: CreateOrderDto, customer: customers) {
+  async createOrder(
+    createOrderDto: CreateOrderDto,
+    customer: customers,
+    idempotencyKey?: string,
+  ) {
+    // REST-level idempotency: if a key was provided, check if we already processed it
+    if (idempotencyKey) {
+      const existingEvent =
+        await this.PrismaService.processed_events.findUnique({
+          where: { id: idempotencyKey },
+        });
+
+      if (existingEvent && existingEvent.order_id) {
+        this.logger.log(
+          `Idempotency key ${idempotencyKey} already used, returning existing order.`,
+        );
+        return this.getOrder(existingEvent.order_id);
+      }
+    }
+
     const itemIds = createOrderDto.items.map((i) => i.item_id);
     const dbItems = await this.PrismaService.items.findMany({
       where: { id: { in: itemIds } },
@@ -60,9 +80,22 @@ export class OrdersService {
       },
     });
 
+    // Record the idempotency key so the same request won't create another order
+    if (idempotencyKey) {
+      await this.PrismaService.processed_events.create({
+        data: {
+          id: idempotencyKey,
+          topic: 'order.create.rest',
+          order_id: order.id,
+        },
+      });
+    }
+
     this.logger.log(`Order created: ${order.id}`);
 
+    const eventId = randomUUID();
     this.KafkaClient.emit('order.created', {
+      eventId,
       orderId: order.id,
       customerId: order.customer_id,
       items: order.order_items.map((oi) => ({
@@ -92,16 +125,53 @@ export class OrdersService {
   }
 
   async updateOrderStatus(
+    eventId: string,
     orderId: string,
     status: order_status,
     failureReason?: string,
   ) {
-    return this.PrismaService.orders.update({
-      where: { id: orderId },
-      data: {
-        status,
-        failure_reason: failureReason,
-      },
+    // Guard: skip if no eventId
+    if (!eventId) {
+      this.logger.warn(
+        `Skipping status update without eventId for order ${orderId}`,
+      );
+      return;
+    }
+
+    // Idempotency check
+    const existingEvent = await this.PrismaService.processed_events.findUnique({
+      where: { id: eventId },
     });
+
+    if (existingEvent) {
+      this.logger.log(
+        `Event ${eventId} already processed, skipping duplicate.`,
+      );
+      return;
+    }
+
+    // Atomically update order status and record the event
+    const [updatedOrder] = await this.PrismaService.$transaction([
+      this.PrismaService.orders.update({
+        where: { id: orderId },
+        data: {
+          status,
+          failure_reason: failureReason,
+        },
+      }),
+      this.PrismaService.processed_events.create({
+        data: {
+          id: eventId,
+          topic:
+            status === order_status.CONFIRMED
+              ? 'order.confirmed'
+              : 'order.failed',
+          order_id: orderId,
+        },
+      }),
+    ]);
+
+    this.logger.log(`Order ${orderId} status updated to ${status}`);
+    return updatedOrder;
   }
 }

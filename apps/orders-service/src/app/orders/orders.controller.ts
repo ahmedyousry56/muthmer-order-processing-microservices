@@ -2,12 +2,14 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   Param,
   ParseUUIDPipe,
   Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { ApiHeader } from '@nestjs/swagger';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
@@ -25,15 +27,26 @@ export class OrdersController {
   @ApiOperation({
     summary: 'Create a new order',
     description:
-      'Creates a new order with PENDING status and publishes an order.created event to Kafka',
+      'Creates a new order with PENDING status and publishes an order.created event to Kafka. Use X-Idempotency-Key header to prevent duplicate orders.',
+  })
+  @ApiHeader({
+    name: 'X-Idempotency-Key',
+    description:
+      'Unique key to prevent duplicate order creation. Send the same key to get the same order back.',
+    required: false,
   })
   @Post()
   @UseGuards(AuthGuard)
   async createOrder(
     @Body() createOrderDto: CreateOrderDto,
     @Req() req: RequestWithUser,
+    @Headers('x-idempotency-key') idempotencyKey?: string,
   ) {
-    return this.OrdersService.createOrder(createOrderDto, req.user);
+    return this.OrdersService.createOrder(
+      createOrderDto,
+      req.user,
+      idempotencyKey,
+    );
   }
 
   @ApiOperation({
@@ -48,14 +61,19 @@ export class OrdersController {
 
   @EventPattern('order.confirmed')
   async handleOrderConfirmed(@Payload() message: any) {
-    const { orderId } = message;
-    await this.OrdersService.updateOrderStatus(orderId, order_status.CONFIRMED);
+    const { eventId, orderId } = message;
+    await this.OrdersService.updateOrderStatus(
+      eventId,
+      orderId,
+      order_status.CONFIRMED,
+    );
   }
 
   @EventPattern('order.failed')
   async handleOrderFailed(@Payload() message: any) {
-    const { orderId, reason } = message;
+    const { eventId, orderId, reason } = message;
     await this.OrdersService.updateOrderStatus(
+      eventId,
       orderId,
       order_status.FAILED,
       reason,
