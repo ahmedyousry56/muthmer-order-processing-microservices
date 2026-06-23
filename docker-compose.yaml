@@ -69,7 +69,8 @@ services:
       DB_PORT: ${DB_PORT:-5432}
       DB_USER: ${DB_USER:-postgres}
       DB_PASS: ${DB_PASS:-postgres}
-      DB_NAME: ${DB_NAME:-orders}
+      DB_NAME: ${DB_NAME:-muthmerDB}
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASS:-postgres}@${DB_HOST:-postgres}:${DB_PORT:-5432}/${DB_NAME:-muthmerDB}?schema=public
       NODE_ENV: ${NODE_ENV:-development}
 
   inventory-service:
@@ -88,7 +89,8 @@ services:
       DB_PORT: ${DB_PORT:-5432}
       DB_USER: ${DB_USER:-postgres}
       DB_PASS: ${DB_PASS:-postgres}
-      DB_NAME: ${DB_NAME:-orders}
+      DB_NAME: ${DB_NAME:-muthmerDB}
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASS:-postgres}@${DB_HOST:-postgres}:${DB_PORT:-5432}/${DB_NAME:-muthmerDB}?schema=public
       NODE_ENV: ${NODE_ENV:-development}
 
 volumes:
