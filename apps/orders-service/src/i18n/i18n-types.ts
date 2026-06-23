@@ -20,6 +20,11 @@ export type I18nTranslations = {
         "invalid_credentials": string;
         "logged_in": string;
         "logged_out": string;
+        "unauthorized": string;
+    };
+    "orders": {
+        "items_not_found": string;
+        "order_not_found": string;
     };
 };
 /* prettier-ignore */

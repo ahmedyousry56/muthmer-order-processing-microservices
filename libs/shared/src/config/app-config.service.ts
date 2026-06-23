@@ -27,4 +27,18 @@ export class AppConfigService {
       saltRound: this.ConfigService.get('BCRYPT_SALT_ROUNDS', 10),
     };
   }
+
+  get kafka() {
+    return {
+      broker: this.ConfigService.get('KAFKA_BROKER', 'localhost:9092'),
+      ordersGroupId: this.ConfigService.get(
+        'KAFKA_ORDERS_GROUP',
+        'orders-consumer-group',
+      ),
+      inventoryGroupId: this.ConfigService.get(
+        'KAFKA_INVENTORY_GROUP',
+        'inventory-consumer-group',
+      ),
+    };
+  }
 }

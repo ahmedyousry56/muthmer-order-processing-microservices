@@ -1,16 +1,40 @@
 import { Logger } from '@nestjs/common';
-import { AppModule } from './app/app.module';
 import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app/app.module';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { AppConfigService } from '@libs/shared';
 
-export async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const appConfigService = app.get(AppConfigService);
-  const globalPrefix = appConfigService.app.prefix;
-  app.setGlobalPrefix(globalPrefix);
-  const port = appConfigService.app.port;
-  await app.listen(port);
-  Logger.log(`Application is running on: ${await app.getUrl()}`, 'Bootstrap');
+async function bootstrap() {
+  // Create a temporary app context to access AppConfigService
+  const appContext = await NestFactory.createApplicationContext(AppModule);
+  const configService = appContext.get(AppConfigService);
+
+  const broker = configService.kafka.broker;
+  const groupId = configService.kafka.inventoryGroupId;
+
+  await appContext.close();
+
+  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
+    AppModule,
+    {
+      transport: Transport.KAFKA,
+      options: {
+        client: {
+          brokers: [broker],
+          allowAutoTopicCreation: true,
+        },
+        consumer: {
+          groupId,
+          allowAutoTopicCreation: true,
+        },
+      },
+    },
+  );
+
+  await app.listen();
+  Logger.log(
+    `Inventory Service is running via Kafka (broker: ${broker}, group: ${groupId})`,
+  );
 }
 
 bootstrap().catch((err) => {

@@ -1,20 +1,22 @@
 import { HttpStatus, Logger } from '@nestjs/common';
 import { AppModule } from './app/app.module';
 import { NestFactory } from '@nestjs/core';
-import { AppConfigService, GlobalExceptionsFilter } from '@libs/shared';
+import { AppConfigService } from '@libs/shared';
 import { I18nValidationPipe } from 'nestjs-i18n';
 import cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Transport } from '@nestjs/microservices';
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
-  app.use(cookieParser());
-
   const appConfigService = app.get(AppConfigService);
-
   const globalPrefix = appConfigService.app.prefix;
-
+  app.enableCors({
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    credentials: true,
+  });
+  app.use(cookieParser());
   app.useGlobalPipes(
     new I18nValidationPipe({
       whitelist: true,
@@ -24,15 +26,13 @@ export async function bootstrap() {
       stopAtFirstError: false,
     }),
   );
-
-  app.useGlobalFilters(new GlobalExceptionsFilter());
-
   app.setGlobalPrefix(globalPrefix);
 
   const config = new DocumentBuilder()
     .setTitle('Muthmer Order Processing API')
     .setDescription('Muthmer Order Processing API')
     .setVersion('1.0.0')
+    .addBearerAuth()
     .addTag('Orders')
     .addGlobalParameters({
       name: 'x-custom-lang',
@@ -48,8 +48,22 @@ export async function bootstrap() {
 
   const port = appConfigService.app.port;
 
-  await app.listen(port);
+  app.connectMicroservice({
+    transport: Transport.KAFKA,
+    options: {
+      client: {
+        brokers: [appConfigService.kafka.broker],
+        allowAutoTopicCreation: true,
+      },
+      consumer: {
+        groupId: appConfigService.kafka.ordersGroupId,
+        allowAutoTopicCreation: true,
+      },
+    },
+  });
 
+  await app.startAllMicroservices();
+  await app.listen(port);
   Logger.log(`Application is running on: ${await app.getUrl()}`, 'Bootstrap');
 }
 

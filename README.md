@@ -1,110 +1,255 @@
-# MuthmerOrderProcessing
+# Muthmer Order Processing — NestJS Microservices with Apache Kafka
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+An event-driven system composed of two NestJS microservices that communicate asynchronously over Apache Kafka. The system processes customer orders through the **Orders Service** (REST API + Kafka) and the **Inventory Service** (pure Kafka microservice).
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
-
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/js?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
-
-## Generate a library
-
-```sh
-npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
-```
-
-## Run tasks
-
-To build the library use:
-
-```sh
-npx nx build pkg1
-```
-
-To run any task with Nx use:
-
-```sh
-npx nx <target> <project-name>
-```
-
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
-
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Versioning and releasing
-
-To version and release the library use
+## Architecture
 
 ```
-npx nx release
+┌────────────┐       POST /orders        ┌─────────────────┐
+│   Client   │ ─────────────────────────▶ │  Orders Service │
+│            │ ◀───────────────────────── │  (REST + Kafka) │
+│            │       GET /orders/:id      │                 │
+└────────────┘                            └────────┬────────┘
+                                                   │
+                                          order.created ▼
+                                          ┌────────────────────┐
+                                          │       Kafka        │
+                                          └────────────────────┘
+                                   order.confirmed / ▲        │ order.created
+                                   order.failed      │        ▼
+                                          ┌────────────────────┐
+                                          │ Inventory Service  │
+                                          │   (Kafka only)     │
+                                          └────────────────────┘
 ```
 
-Pass `--dry-run` to see what would happen without actually releasing the library.
+## Event Flow
 
-[Learn more about Nx release &raquo;](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+1. **Client** calls `POST /api/orders` on the Orders Service with a list of items and quantities.
+2. The order is saved to PostgreSQL with status `PENDING` and an `order.created` event is published to Kafka.
+3. **Inventory Service** consumes `order.created`, checks stock levels in the database for the requested items.
+4. If all items are in stock, stock is **deducted** and `order.confirmed` is published. Otherwise, `order.failed` is published with a reason.
+5. **Orders Service** consumes `order.confirmed` / `order.failed` and updates the order status to `CONFIRMED` or `FAILED`.
+6. **Client** can call `GET /api/orders/:id` at any time to read the current status.
 
-## Keep TypeScript project references up to date
+### Order Status Lifecycle
 
-Nx automatically updates TypeScript [project references](https://www.typescriptlang.org/docs/handbook/project-references.html) in `tsconfig.json` files to ensure they remain accurate based on your project dependencies (`import` or `require` statements). This sync is automatically done when running tasks such as `build` or `typecheck`, which require updated references to function correctly.
-
-To manually trigger the process to sync the project graph dependencies information to the TypeScript project references, run the following command:
-
-```sh
-npx nx sync
+```
+PENDING ──▶ CONFIRMED   (all items in stock)
+PENDING ──▶ FAILED      (insufficient stock / error)
 ```
 
-You can enforce that the TypeScript project references are always in the correct state when running in CI by adding a step to your CI job configuration that runs the following command:
+## Tech Stack
 
-```sh
-npx nx sync:check
+- **NestJS** — Framework for both services
+- **Apache Kafka** — Async messaging between services via `@nestjs/microservices`
+- **PostgreSQL** — Database for orders, items, and customers
+- **Prisma** — ORM with migrations and seeding
+- **Docker Compose** — Orchestrates Kafka, PostgreSQL, and both services
+
+## Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
+- [Node.js](https://nodejs.org/) v20+ (for local development)
+
+## Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone <repo-url>
+cd muthmer-order-processing
 ```
 
-[Learn more about nx sync](https://nx.dev/reference/nx-commands#sync)
+### 2. Configure environment
 
-## Set up CI!
+Copy the example `.env` file and adjust values as needed:
 
-### Step 1
-
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
+```bash
+cp example.env .env
 ```
 
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+Key environment variables:
 
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+| Variable                | Description                        | Default                                                   |
+| ----------------------- | ---------------------------------- | --------------------------------------------------------- |
+| `PORT`                  | Orders Service HTTP port           | `3000`                                                    |
+| `API_PREFIX`            | REST API prefix                    | `api`                                                     |
+| `DATABASE_URL`          | PostgreSQL connection string       | `postgresql://postgres:postgres@localhost:5432/muthmerDB` |
+| `JWT_SECRET`            | Secret key for JWT tokens          | `super-secret-key`                                        |
+| `KAFKA_BROKER`          | Kafka broker address               | `localhost:9092`                                          |
+| `KAFKA_ORDERS_GROUP`    | Kafka consumer group for Orders    | `orders-consumer-group`                                   |
+| `KAFKA_INVENTORY_GROUP` | Kafka consumer group for Inventory | `inventory-consumer-group`                                |
 
-### Step 2
+### 3. Start infrastructure with Docker Compose
 
-Use the following command to configure a CI workflow for your workspace:
+Spin up Kafka, PostgreSQL, and both services:
 
-```sh
-npx nx g ci-workflow
+```bash
+docker-compose up -d
 ```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+> This starts Kafka (KRaft mode), PostgreSQL, Orders Service, and Inventory Service.
 
-## Install Nx Console
+### 4. Run database migrations
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+```bash
+npx prisma migrate deploy --schema=libs/shared/prisma/schema.prisma
+```
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### 5. Seed the database
 
-## Useful links
+The seed populates the database with **test data** for development and demonstration:
 
-Learn more:
+```bash
+npm run prisma:seed
+```
 
-- [Learn more about this workspace setup](https://nx.dev/nx-api/js?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+This creates:
 
-And join the Nx community:
+**Customers** (3 pre-registered users):
 
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+| Name            | Email                     | Password             |
+| --------------- | ------------------------- | -------------------- |
+| Ahmed Yousry    | ahmedyousry098@gmail.com  | `SecurePassword@123` |
+| Mohammed Ali    | mohammed.ali@gmail.com    | `SecurePassword@123` |
+| Zainab Mohammed | zainab.mohammed@gmail.com | `SecurePassword@123` |
+
+**Items** (3 products with stock):
+
+| Name                | SKU          | Price  | Stock |
+| ------------------- | ------------ | ------ | ----- |
+| Wireless Mouse      | MOUSE-001    | $29.99 | 150   |
+| Mechanical Keyboard | KEYBOARD-001 | $89.99 | 75    |
+| USB-C Hub           | HUB-001      | $45.00 | 200   |
+
+> ⚠️ **Note**: Seed data is for testing and development only. All customer passwords are hashed with bcrypt.
+
+## Local Development (without Docker for services)
+
+If you prefer to run the services locally during development:
+
+```bash
+# Start only Kafka and PostgreSQL via Docker
+docker-compose up -d kafka postgres
+
+# Install dependencies
+npm install
+
+# Run migrations
+npm run prisma:migrate
+
+# Seed the database
+npm run prisma:seed
+
+# Start Orders Service (terminal 1)
+npm run start:orders
+
+# Start Inventory Service (terminal 2)
+npm run start:inventory
+```
+
+## API Documentation
+
+Once the Orders Service is running, Swagger documentation is available at:
+
+```
+http://localhost:<PORT>/docs
+```
+
+### Endpoints
+
+#### Auth
+
+| Method | Endpoint             | Description             |
+| ------ | -------------------- | ----------------------- |
+| POST   | `/api/auth/register` | Register a new customer |
+| POST   | `/api/auth/login`    | Login and get JWT token |
+| POST   | `/api/auth/logout`   | Logout (clears cookie)  |
+
+#### Orders (requires authentication)
+
+| Method | Endpoint          | Description                         |
+| ------ | ----------------- | ----------------------------------- |
+| POST   | `/api/orders`     | Create a new order                  |
+| GET    | `/api/orders/:id` | Get order by ID with current status |
+
+### Example Usage
+
+**1. Login to get a token:**
+
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "ahmedyousry098@gmail.com", "password": "SecurePassword@123"}'
+```
+
+**2. Create an order (use the access_token from login):**
+
+```bash
+curl -X POST http://localhost:3000/api/orders \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <access_token>" \
+  -d '{
+    "items": [
+      { "item_id": "<item-uuid>", "quantity": 2 },
+      { "item_id": "<item-uuid>", "quantity": 1 }
+    ]
+  }'
+```
+
+**3. Check order status:**
+
+```bash
+curl http://localhost:3000/api/orders/<order-id> \
+  -H "Authorization: Bearer <access_token>"
+```
+
+## Project Structure
+
+```
+muthmer-order-processing/
+├── apps/
+│   ├── orders-service/         # REST API + Kafka consumer/producer
+│   │   └── src/
+│   │       ├── app/
+│   │       │   ├── auth/       # Authentication (register, login, JWT)
+│   │       │   │   ├── dto/
+│   │       │   │   ├── guards/
+│   │       │   │   ├── interfaces/
+│   │       │   │   └── middleware/
+│   │       │   └── orders/     # Orders module (CRUD + Kafka events)
+│   │       │       └── dto/
+│   │       └── i18n/           # Internationalization (en, ar)
+│   └── inventory-service/      # Pure Kafka microservice
+│       └── src/
+│           └── app/
+├── libs/
+│   └── shared/                 # Shared library
+│       ├── prisma/
+│       │   ├── migrations/
+│       │   ├── schema.prisma
+│       │   └── seed/           # Database seed scripts
+│       └── src/
+│           ├── config/         # AppConfigService, env validation
+│           ├── dto/
+│           ├── filters/        # Global exception filter
+│           ├── i18n/
+│           └── prisma/         # PrismaService
+├── docker-compose.yaml
+├── .env
+└── example.env
+```
+
+## Available Scripts
+
+| Command                   | Description                         |
+| ------------------------- | ----------------------------------- |
+| `npm run start:orders`    | Start Orders Service in dev mode    |
+| `npm run start:inventory` | Start Inventory Service in dev mode |
+| `npm run build:orders`    | Build Orders Service                |
+| `npm run build:inventory` | Build Inventory Service             |
+| `npm run prisma:migrate`  | Run Prisma migrations               |
+| `npm run prisma:seed`     | Seed the database with test data    |
+| `npm run prisma:studio`   | Open Prisma Studio (database GUI)   |
+| `npm run format`          | Format code with Prettier           |
