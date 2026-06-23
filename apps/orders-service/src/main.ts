@@ -54,11 +54,15 @@ export async function bootstrap() {
       client: {
         brokers: [appConfigService.kafka.broker],
         allowAutoTopicCreation: true,
+        retry: {
+          initialRetryTime: 300,
+          retries: 5,
+        },
       },
       consumer: {
         groupId: appConfigService.kafka.ordersGroupId,
         allowAutoTopicCreation: true,
-        sessionTimeout: 30000, // ← fixes the negative timeout warning
+        sessionTimeout: 30000,
         heartbeatInterval: 3000,
         rebalanceTimeout: 60000,
       },

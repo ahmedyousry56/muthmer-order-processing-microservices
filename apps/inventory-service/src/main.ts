@@ -22,6 +22,10 @@ async function bootstrap() {
         client: {
           brokers: [broker],
           allowAutoTopicCreation: true,
+          retry: {
+            initialRetryTime: 300,
+            retries: 5,
+          },
         },
         consumer: {
           groupId,
