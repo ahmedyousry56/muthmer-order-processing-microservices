@@ -11,6 +11,6 @@ RUN npx nx build inventory-service --prod
 FROM node:24.15.0-slim AS production
 WORKDIR /app
 COPY package*.json ./
-RUN npm install --omit=dev && npm cache clean --force
+RUN npm install --omit=dev --ignore-scripts && npm cache clean --force
 COPY --from=builder /app/apps/inventory-service/dist ./dist
 CMD ["node", "dist/main.js"]
