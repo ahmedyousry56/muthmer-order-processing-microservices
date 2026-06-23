@@ -1,10 +1,10 @@
 {
   "validation_error": "حدث خطأ في التحقق من صحة البيانات",
-  "property_required": "{{property}} مطلوب",
-  "property_not_email": "{{property}} يجب أن يكون بريد إلكتروني صالح",
-  "property_min_length": "{{property}} يجب أن يكون بطول {{length}} أحرف على الأقل",
-  "property_max_length": "{{property}} يجب أن يكون بطول {{length}} أحرف على الأكثر",
-  "property_is_string": "{{property}} يجب أن يكون نص",
-  "property_is_number": "{{property}} يجب أن يكون رقم",
-  "property_is_boolean": "{{property}} يجب أن يكون قيمة منطقية"
+  "property_required": "{property} مطلوب",
+  "property_not_email": "{property} يجب أن يكون بريد إلكتروني صالح",
+  "property_min_length": "{property} يجب أن يكون بطول {length} أحرف على الأقل",
+  "property_max_length": "{property} يجب أن يكون بطول {length} أحرف على الأكثر",
+  "property_is_string": "{property} يجب أن يكون نص",
+  "property_is_number": "{property} يجب أن يكون رقم",
+  "property_is_boolean": "{property} يجب أن يكون قيمة منطقية"
 }

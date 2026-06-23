@@ -11,9 +11,6 @@ export class LoginDto {
   @IsString({
     message: i18nValidationMessage<I18nTranslations>(
       'validation.property_is_string',
-      {
-        args: { property: 'email' },
-      },
     ),
   })
   @IsNotEmpty({
@@ -26,11 +23,6 @@ export class LoginDto {
     {
       message: i18nValidationMessage<I18nTranslations>(
         'validation.property_not_email',
-        {
-          args: {
-            property: 'email',
-          },
-        },
       ),
     },
   )
@@ -48,6 +40,9 @@ export class LoginDto {
   @MinLength(8, {
     message: i18nValidationMessage<I18nTranslations>(
       'validation.property_min_length',
+      {
+        args: { length: 8 },
+      },
     ),
   })
   @IsNotEmpty({

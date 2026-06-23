@@ -1,10 +1,10 @@
 {
   "validation_error": "Validation error",
-  "property_required": "{{property}} is required",
-  "property_not_email": "{{property}} must be an email",
-  "property_min_length": "{{property}} must be at least {{length}} characters long",
-  "property_max_length": "{{property}} must be at most {{length}} characters long",
-  "property_is_string": "{{property}} must be a string",
-  "property_is_number": "{{property}} must be a number",
-  "property_is_boolean": "{{property}} must be a boolean"
+  "property_required": "{property} is required",
+  "property_not_email": "{property} must be an email",
+  "property_min_length": "{property} must be at least {length} characters long",
+  "property_max_length": "{property} must be at most {length} characters long",
+  "property_is_string": "{property} must be a string",
+  "property_is_number": "{property} must be a number",
+  "property_is_boolean": "{property} must be a boolean"
 }
