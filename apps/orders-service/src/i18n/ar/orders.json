@@ -1,5 +1,6 @@
 {
   "items_not_found": "العناصر غير موجودة: {missingItems}",
   "order_not_found": "الطلب برقم {id} غير موجود",
-  "invalid_idempotency_key": "يجب أن يكون رأس x-idempotency-key معرف UUID صالحاً"
+  "invalid_idempotency_key": "يجب أن يكون رأس x-idempotency-key معرف UUID صالحاً",
+  "invalid_id": "معرف غير صالح"
 }

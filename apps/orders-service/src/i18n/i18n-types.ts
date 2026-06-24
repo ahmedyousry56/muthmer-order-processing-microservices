@@ -28,6 +28,7 @@ export type I18nTranslations = {
         "items_not_found": string;
         "order_not_found": string;
         "invalid_idempotency_key": string;
+        "invalid_id": string;
     };
 };
 /* prettier-ignore */

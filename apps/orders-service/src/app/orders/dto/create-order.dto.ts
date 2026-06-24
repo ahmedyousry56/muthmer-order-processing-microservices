@@ -18,26 +18,12 @@ export class OrderItemDto {
     description: 'UUID of the item to order',
     example: '550e8400-e29b-41d4-a716-446655440000',
   })
-  @IsNotEmpty({
-    message: i18nValidationMessage<I18nTranslations>(
-      'validation.property_required',
-      {
-        args: { property: 'item_id' },
-      },
-    ),
-  })
+  @IsNotEmpty()
   @IsUUID('7', {
-    message: i18nValidationMessage<I18nTranslations>(
-      'validation.property_not_valid',
-      {
-        args: { property: 'item_id' },
-      },
-    ),
+    message: i18nValidationMessage<I18nTranslations>('orders.invalid_id'),
   })
   @IsExists('items', {
-    message: i18nValidationMessage<I18nTranslations>('validation.invalid_id', {
-      args: { id: 'item_id' },
-    }),
+    message: i18nValidationMessage<I18nTranslations>('orders.invalid_id'),
   })
   item_id!: string;
 
@@ -57,14 +43,7 @@ export class CreateOrderDto {
     type: [OrderItemDto],
   })
   @IsArray()
-  @ArrayMinSize(1, {
-    message: i18nValidationMessage<I18nTranslations>(
-      'validation.property_required',
-      {
-        args: { property: 'items' },
-      },
-    ),
-  })
+  @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
   items!: OrderItemDto[];
