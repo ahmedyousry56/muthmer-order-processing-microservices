@@ -107,7 +107,7 @@ export class OrdersService {
     return order;
   }
 
-  private async getOrder(id: string) {
+  async getOrder(id: string) {
     const order = await this.PrismaService.orders.findUnique({
       where: { id },
       include: { order_items: true },
