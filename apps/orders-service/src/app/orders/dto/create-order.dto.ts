@@ -20,7 +20,7 @@ export class OrderItemDto {
   })
   @IsNotEmpty({
     message: i18nValidationMessage<I18nTranslations>(
-      'orders.property_required',
+      'validation.property_required',
       {
         args: { property: 'item_id' },
       },
@@ -28,14 +28,14 @@ export class OrderItemDto {
   })
   @IsUUID('7', {
     message: i18nValidationMessage<I18nTranslations>(
-      'orders.property_not_valid',
+      'validation.property_not_valid',
       {
         args: { property: 'item_id' },
       },
     ),
   })
   @IsExists('items', {
-    message: i18nValidationMessage<I18nTranslations>('orders.invalid_id', {
+    message: i18nValidationMessage<I18nTranslations>('validation.invalid_id', {
       args: { id: 'item_id' },
     }),
   })
@@ -59,7 +59,7 @@ export class CreateOrderDto {
   @IsArray()
   @ArrayMinSize(1, {
     message: i18nValidationMessage<I18nTranslations>(
-      'orders.property_required',
+      'validation.property_required',
       {
         args: { property: 'items' },
       },

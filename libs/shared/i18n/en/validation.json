@@ -6,5 +6,7 @@
   "property_max_length": "{property} must be at most {length} characters long",
   "property_is_string": "{property} must be a string",
   "property_is_number": "{property} must be a number",
-  "property_is_boolean": "{property} must be a boolean"
+  "property_is_boolean": "{property} must be a boolean",
+  "property_not_valid": "Property {property} is not valid",
+  "invalid_id": "Invalid id {id}"
 }

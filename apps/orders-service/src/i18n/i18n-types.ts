@@ -14,6 +14,8 @@ export type I18nTranslations = {
         "property_is_string": string;
         "property_is_number": string;
         "property_is_boolean": string;
+        "property_not_valid": string;
+        "invalid_id": string;
     };
     "auth": {
         "user_already_exists": string;
@@ -26,9 +28,6 @@ export type I18nTranslations = {
         "items_not_found": string;
         "order_not_found": string;
         "invalid_idempotency_key": string;
-        "invalid_id": string;
-        "property_required": string;
-        "property_not_valid": string;
     };
 };
 /* prettier-ignore */

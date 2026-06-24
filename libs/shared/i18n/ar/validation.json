@@ -6,5 +6,7 @@
   "property_max_length": "{property} يجب أن يكون بطول {length} أحرف على الأكثر",
   "property_is_string": "{property} يجب أن يكون نص",
   "property_is_number": "{property} يجب أن يكون رقم",
-  "property_is_boolean": "{property} يجب أن يكون قيمة منطقية"
+  "property_is_boolean": "{property} يجب أن يكون قيمة منطقية",
+  "property_not_valid": "الحقل {property} غير صالح",
+  "invalid_id": "معرف غير صالح {id}"
 }

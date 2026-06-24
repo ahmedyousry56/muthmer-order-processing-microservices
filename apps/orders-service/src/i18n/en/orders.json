@@ -1,8 +1,5 @@
 {
   "items_not_found": "Items not found: {missingItems}",
   "order_not_found": "Order with id {id} not found",
-  "invalid_idempotency_key": "x-idempotency-key header must be a valid UUID",
-  "invalid_id": "Invalid id {id}",
-  "property_required": "Property {property} is required",
-  "property_not_valid": "Property {property} is not valid"
+  "invalid_idempotency_key": "x-idempotency-key header must be a valid UUID"
 }
