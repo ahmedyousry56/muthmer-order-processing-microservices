@@ -7,16 +7,38 @@ import {
   ArrayMinSize,
   ValidateNested,
 } from 'class-validator';
+import { IsExists } from '@libs/shared';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { i18nValidationMessage } from 'nestjs-i18n';
+import { I18nTranslations } from '../../../i18n/i18n-types';
 
 export class OrderItemDto {
   @ApiProperty({
     description: 'UUID of the item to order',
     example: '550e8400-e29b-41d4-a716-446655440000',
   })
-  @IsUUID()
-  @IsNotEmpty()
+  @IsNotEmpty({
+    message: i18nValidationMessage<I18nTranslations>(
+      'orders.property_required',
+      {
+        args: { property: 'item_id' },
+      },
+    ),
+  })
+  @IsUUID('7', {
+    message: i18nValidationMessage<I18nTranslations>(
+      'orders.property_not_valid',
+      {
+        args: { property: 'item_id' },
+      },
+    ),
+  })
+  @IsExists('items', {
+    message: i18nValidationMessage<I18nTranslations>('orders.invalid_id', {
+      args: { id: 'item_id' },
+    }),
+  })
   item_id!: string;
 
   @ApiProperty({
@@ -35,7 +57,14 @@ export class CreateOrderDto {
     type: [OrderItemDto],
   })
   @IsArray()
-  @ArrayMinSize(1)
+  @ArrayMinSize(1, {
+    message: i18nValidationMessage<I18nTranslations>(
+      'orders.property_required',
+      {
+        args: { property: 'items' },
+      },
+    ),
+  })
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
   items!: OrderItemDto[];

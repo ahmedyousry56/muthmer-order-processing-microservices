@@ -1,13 +1,15 @@
 import { HttpStatus, Logger } from '@nestjs/common';
 import { AppModule } from './app/app.module';
 import { NestFactory } from '@nestjs/core';
-import { AppConfigService } from '@libs/shared';
+import { AppConfigService, GlobalExceptionsFilter } from '@libs/shared';
 import { I18nValidationPipe } from 'nestjs-i18n';
 import cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { useContainer } from 'class-validator';
 
 export async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
   const appConfigService = app.get(AppConfigService);
   const globalPrefix = appConfigService.app.prefix;
   app.enableCors({
@@ -25,6 +27,7 @@ export async function bootstrap() {
       stopAtFirstError: false,
     }),
   );
+  app.useGlobalFilters(new GlobalExceptionsFilter());
   app.setGlobalPrefix(globalPrefix);
 
   const config = new DocumentBuilder()
